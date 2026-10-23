@@ -1,0 +1,42 @@
+{
+  "host": "10.0.114.30",
+  "frames": 10,
+  "models": {
+    "models/yolo11n-pose": {
+      "roundtrip_mean_ms": 7953.793021900128,
+      "roundtrip_p50_ms": 7424.905959000171,
+      "roundtrip_p95_ms": 9979.290412400132,
+      "fps_one_stream": 0.1257261783461778,
+      "cosine_mean": 0.9869548033616318,
+      "cosine_min": 0.9512753749496001,
+      "objects_cpu": 3,
+      "objects_tpu": 3,
+      "box_match": 1.0,
+      "worker": {
+        "worker_pid": "7",
+        "thread_name": "Worker Thread #1",
+        "inference_time": 0.0008219999726861715,
+        "status_code": 0,
+        "inference_opening_timestamp": 1792766438
+      }
+    },
+    "models/yolo11n": {
+      "roundtrip_mean_ms": 9284.192085100038,
+      "roundtrip_p50_ms": 9269.009327500044,
+      "roundtrip_p95_ms": 11501.660769350381,
+      "fps_one_stream": 0.10770996451106116,
+      "cosine_mean": 0.981214616825799,
+      "cosine_min": 0.941215504151575,
+      "objects_cpu": 5,
+      "objects_tpu": 3,
+      "box_match": 0.8,
+      "worker": {
+        "worker_pid": "7",
+        "thread_name": "Worker Thread #1",
+        "inference_time": 0.05703900009393692,
+        "status_code": 0,
+        "inference_opening_timestamp": 1792766636
+      }
+    }
+  }
+}

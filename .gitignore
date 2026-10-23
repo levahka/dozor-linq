@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+data/events.db
+data/media/
+data/replay_media/
+models/*_linq/
+linq_bench.json
+config/*.tmp
