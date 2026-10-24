@@ -1,0 +1,224 @@
+{
+ "summary": {
+  "fps": 10.0,
+  "videos": 10,
+  "violations": 7,
+  "found": 7,
+  "recall": 1.0,
+  "alerts": 9,
+  "true_alerts": 9,
+  "precision": 1.0,
+  "mean_delay_s": 3.2285714285714286,
+  "max_delay_s": 9.266666666666667,
+  "clean_videos": 3,
+  "clean_videos_no_alerts": 3
+ },
+ "videos": [
+  {
+   "video": "01_норма.mp4",
+   "gt": [],
+   "events": [],
+   "sec": 12.8,
+   "frames": 96,
+   "proc_s": 14.09191608428955
+  },
+  {
+   "video": "02_машина.mp4",
+   "gt": [
+    {
+     "type": "proximity",
+     "start": 2.0,
+     "end": 5.0,
+     "hit": true,
+     "delay": 0.0
+    }
+   ],
+   "events": [
+    {
+     "type": "proximity",
+     "alert": 1.7333333333333334,
+     "onset": 0.9333333333333333,
+     "info": "car в 146px",
+     "ok": true
+    }
+   ],
+   "sec": 5.533333333333333,
+   "frames": 42,
+   "proc_s": 5.033035516738892
+  },
+  {
+   "video": "03_норма.mp4",
+   "gt": [],
+   "events": [],
+   "sec": 10.466666666666667,
+   "frames": 79,
+   "proc_s": 11.78065299987793
+  },
+  {
+   "video": "04_норма.mp4",
+   "gt": [],
+   "events": [],
+   "sec": 18.866666666666667,
+   "frames": 142,
+   "proc_s": 19.963088750839233
+  },
+  {
+   "video": "05_бег.mp4",
+   "gt": [
+    {
+     "type": "running",
+     "start": 3.0,
+     "end": 12.0,
+     "hit": true,
+     "delay": 5.533333333333333
+    }
+   ],
+   "events": [
+    {
+     "type": "running",
+     "alert": 8.533333333333333,
+     "onset": 7.466666666666667,
+     "info": "скорость 1.0 роста/с",
+     "ok": true
+    }
+   ],
+   "sec": 12.466666666666667,
+   "frames": 94,
+   "proc_s": 13.736713171005249
+  },
+  {
+   "video": "06_зона.mp4",
+   "gt": [
+    {
+     "type": "zone",
+     "start": 13.0,
+     "end": 22.0,
+     "hit": true,
+     "delay": 1.4000000000000004
+    }
+   ],
+   "events": [
+    {
+     "type": "zone",
+     "alert": 14.4,
+     "onset": 13.333333333333334,
+     "info": "зона «Разметка на полу»",
+     "ok": true
+    }
+   ],
+   "sec": 25.4,
+   "frames": 191,
+   "proc_s": 26.887349367141724
+  },
+  {
+   "video": "07_падение.mp4",
+   "gt": [
+    {
+     "type": "fall",
+     "start": 9.0,
+     "end": 21.0,
+     "hit": true,
+     "delay": 2.466666666666667
+    }
+   ],
+   "events": [
+    {
+     "type": "fall",
+     "alert": 11.466666666666667,
+     "onset": 9.866666666666667,
+     "info": "резкое падение",
+     "ok": true
+    },
+    {
+     "type": "immobile",
+     "alert": 17.066666666666666,
+     "onset": 16.0,
+     "info": "не двигается 6+ с",
+     "ok": true
+    }
+   ],
+   "sec": 28.733333333333334,
+   "frames": 216,
+   "proc_s": 30.89787220954895
+  },
+  {
+   "video": "08_падение.mp4",
+   "gt": [
+    {
+     "type": "fall",
+     "start": 9.0,
+     "end": 22.0,
+     "hit": true,
+     "delay": 1.2666666666666675
+    }
+   ],
+   "events": [
+    {
+     "type": "fall",
+     "alert": 10.266666666666667,
+     "onset": 8.666666666666666,
+     "info": "человек лежит",
+     "ok": true
+    },
+    {
+     "type": "immobile",
+     "alert": 17.6,
+     "onset": 16.533333333333335,
+     "info": "не двигается 6+ с",
+     "ok": true
+    }
+   ],
+   "sec": 26.266666666666666,
+   "frames": 197,
+   "proc_s": 27.627007722854614
+  },
+  {
+   "video": "09_бег.mp4",
+   "gt": [
+    {
+     "type": "running",
+     "start": 4.0,
+     "end": 8.0,
+     "hit": true,
+     "delay": 2.666666666666667
+    }
+   ],
+   "events": [
+    {
+     "type": "running",
+     "alert": 6.666666666666667,
+     "onset": 5.466666666666667,
+     "info": "скорость 1.0 роста/с",
+     "ok": true
+    }
+   ],
+   "sec": 12.066666666666666,
+   "frames": 91,
+   "proc_s": 13.620189189910889
+  },
+  {
+   "video": "10_телефон.mp4",
+   "gt": [
+    {
+     "type": "phone",
+     "start": 3.0,
+     "end": 18.0,
+     "hit": true,
+     "delay": 9.266666666666667
+    }
+   ],
+   "events": [
+    {
+     "type": "phone",
+     "alert": 12.266666666666667,
+     "onset": 10.266666666666667,
+     "info": "смотрит в телефон",
+     "ok": true
+    }
+   ],
+   "sec": 19.6,
+   "frames": 147,
+   "proc_s": 21.11485743522644
+  }
+ ]
+}

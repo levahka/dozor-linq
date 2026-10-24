@@ -1,0 +1,21 @@
+# Настройки камер для прогона роликов команды (tools/eval_my.py, ролики в data/my).
+# Правила по умолчанию — как у боевой камеры; зона нарисована только там, где она есть на полу.
+default_rules:
+  zone: {enabled: true}
+  running: {enabled: true}
+  fall: {enabled: true}
+  immobile: {enabled: true, window_s: 6}
+  proximity: {enabled: true}
+  phone: {enabled: true}
+videos:
+  "06":
+    zones:
+      - id: z1
+        name: Разметка на полу
+        kind: danger
+        severity: critical
+        polygon: [[0.0, 0.66], [1.0, 0.85], [1.0, 1.0], [0.86, 1.0], [0.0, 0.79]]
+  "02":
+    # камера стоянки техники: опасно любое сближение с машиной, даже стоящей (водитель может тронуться)
+    rules:
+      proximity: {enabled: true, require_moving: false}

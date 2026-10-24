@@ -1,0 +1,224 @@
+{
+ "summary": {
+  "fps": 5.0,
+  "videos": 10,
+  "violations": 7,
+  "found": 7,
+  "recall": 1.0,
+  "alerts": 9,
+  "true_alerts": 9,
+  "precision": 1.0,
+  "mean_delay_s": 3.4857142857142853,
+  "max_delay_s": 9.2,
+  "clean_videos": 3,
+  "clean_videos_no_alerts": 3
+ },
+ "videos": [
+  {
+   "video": "01_норма.mp4",
+   "gt": [],
+   "events": [],
+   "sec": 12.8,
+   "frames": 64,
+   "proc_s": 11.138738632202148
+  },
+  {
+   "video": "02_машина.mp4",
+   "gt": [
+    {
+     "type": "proximity",
+     "start": 2.0,
+     "end": 5.0,
+     "hit": true,
+     "delay": 0.0
+    }
+   ],
+   "events": [
+    {
+     "type": "proximity",
+     "alert": 1.8,
+     "onset": 1.0,
+     "info": "car в 145px",
+     "ok": true
+    }
+   ],
+   "sec": 5.533333333333333,
+   "frames": 28,
+   "proc_s": 3.662668466567993
+  },
+  {
+   "video": "03_норма.mp4",
+   "gt": [],
+   "events": [],
+   "sec": 10.466666666666667,
+   "frames": 53,
+   "proc_s": 9.016765594482422
+  },
+  {
+   "video": "04_норма.mp4",
+   "gt": [],
+   "events": [],
+   "sec": 18.866666666666667,
+   "frames": 95,
+   "proc_s": 14.82541012763977
+  },
+  {
+   "video": "05_бег.mp4",
+   "gt": [
+    {
+     "type": "running",
+     "start": 3.0,
+     "end": 12.0,
+     "hit": true,
+     "delay": 5.6
+    }
+   ],
+   "events": [
+    {
+     "type": "running",
+     "alert": 8.6,
+     "onset": 7.6,
+     "info": "скорость 1.1 роста/с",
+     "ok": true
+    }
+   ],
+   "sec": 12.466666666666667,
+   "frames": 63,
+   "proc_s": 10.318093299865723
+  },
+  {
+   "video": "06_зона.mp4",
+   "gt": [
+    {
+     "type": "zone",
+     "start": 13.0,
+     "end": 22.0,
+     "hit": true,
+     "delay": 1.4000000000000004
+    }
+   ],
+   "events": [
+    {
+     "type": "zone",
+     "alert": 14.4,
+     "onset": 13.4,
+     "info": "зона «Разметка на полу»",
+     "ok": true
+    }
+   ],
+   "sec": 25.4,
+   "frames": 127,
+   "proc_s": 19.67779040336609
+  },
+  {
+   "video": "07_падение.mp4",
+   "gt": [
+    {
+     "type": "fall",
+     "start": 9.0,
+     "end": 21.0,
+     "hit": true,
+     "delay": 2.4000000000000004
+    }
+   ],
+   "events": [
+    {
+     "type": "fall",
+     "alert": 11.4,
+     "onset": 9.8,
+     "info": "резкое падение",
+     "ok": true
+    },
+    {
+     "type": "immobile",
+     "alert": 17.0,
+     "onset": 16.0,
+     "info": "не двигается 6+ с",
+     "ok": true
+    }
+   ],
+   "sec": 28.733333333333334,
+   "frames": 144,
+   "proc_s": 22.285571098327637
+  },
+  {
+   "video": "08_падение.mp4",
+   "gt": [
+    {
+     "type": "fall",
+     "start": 9.0,
+     "end": 22.0,
+     "hit": true,
+     "delay": 3.4000000000000004
+    }
+   ],
+   "events": [
+    {
+     "type": "fall",
+     "alert": 12.4,
+     "onset": 10.8,
+     "info": "человек лежит",
+     "ok": true
+    },
+    {
+     "type": "immobile",
+     "alert": 17.4,
+     "onset": 16.4,
+     "info": "не двигается 6+ с",
+     "ok": true
+    }
+   ],
+   "sec": 26.266666666666666,
+   "frames": 132,
+   "proc_s": 20.316001892089844
+  },
+  {
+   "video": "09_бег.mp4",
+   "gt": [
+    {
+     "type": "running",
+     "start": 4.0,
+     "end": 8.0,
+     "hit": true,
+     "delay": 2.4000000000000004
+    }
+   ],
+   "events": [
+    {
+     "type": "running",
+     "alert": 6.4,
+     "onset": 5.4,
+     "info": "скорость 1.0 роста/с",
+     "ok": true
+    }
+   ],
+   "sec": 12.066666666666666,
+   "frames": 61,
+   "proc_s": 10.095414161682129
+  },
+  {
+   "video": "10_телефон.mp4",
+   "gt": [
+    {
+     "type": "phone",
+     "start": 3.0,
+     "end": 18.0,
+     "hit": true,
+     "delay": 9.2
+    }
+   ],
+   "events": [
+    {
+     "type": "phone",
+     "alert": 12.2,
+     "onset": 10.2,
+     "info": "смотрит в телефон",
+     "ok": true
+    }
+   ],
+   "sec": 19.6,
+   "frames": 98,
+   "proc_s": 15.236117839813232
+  }
+ ]
+}
