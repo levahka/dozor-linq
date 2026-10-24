@@ -24,6 +24,8 @@ backend:
     host: 10.0.114.30            # hackathon.lin-q.ru внутри VPN
     login: hackathon27139        # логин Jupyter: программы .tpu лежат в /auto/cache/<login>/
     timeout: 15
+    send_size: 480               # кадр уменьшается до 480 px перед отправкой: ~15 КБ, на слабом Wi-Fi вдвое быстрее
+    quality: 70
 
 notify:
   telegram:

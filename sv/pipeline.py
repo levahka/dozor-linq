@@ -56,7 +56,8 @@ class Models:
         if kind == "relay":   # быстрый режим: посредник linq/relay.py на стенде LinQ
             from .infer.relay_client import RelayYolo
             r = b.get("rabbit", {})
-            common = dict(host=r.get("host", "10.0.114.30"), login=r["login"], timeout=r.get("timeout", 10.0))
+            common = dict(host=r.get("host", "10.0.114.30"), login=r["login"], timeout=r.get("timeout", 10.0),
+                          send_size=r.get("send_size", 480), quality=r.get("quality", 70))
             self.pose = RelayYolo("pose", conf=b.get("pose_conf", 0.2), **common)
             self.detect = RelayYolo("detect", conf=b.get("detect_conf", 0.25), classes=det_classes, **common)
         else:
