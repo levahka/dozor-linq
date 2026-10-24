@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import json
+import threading
 import time
 import uuid
 from typing import List, Optional, Sequence
@@ -27,56 +28,65 @@ class RelayYolo:
         self.conf, self.classes = conf, list(classes) if classes is not None else None
         self.timeout, self.send_size, self.quality = timeout, send_size, quality
         self.names = list(names) if task == "detect" else ["person"]
-        self.last_timing = {}
+        self._tl = threading.local()     # своё соединение у каждого потока: камеры шлют кадры параллельно (на стенде 16 TPU)
+        self._timing = threading.local()
         self._connect()
+
+    @property
+    def last_timing(self):
+        return getattr(self._timing, "v", {})
 
     def _connect(self):
         import pika
 
-        self.conn = pika.BlockingConnection(pika.ConnectionParameters(
+        tl = self._tl
+        tl.conn = pika.BlockingConnection(pika.ConnectionParameters(
             self.host, 5672, credentials=pika.PlainCredentials("guest", "guest"),
             heartbeat=600, blocked_connection_timeout=300))
-        self.ch = self.conn.channel()
-        self.reply = f"dozor_r_{uuid.uuid4().hex[:10]}"
-        self.ch.queue_declare(queue=self.reply, auto_delete=True)
-        self.ch.queue_bind(exchange="tpu.direct", queue=self.reply, routing_key=self.reply)
-        self.res = {}
+        tl.ch = tl.conn.channel()
+        tl.reply = f"dozor_r_{uuid.uuid4().hex[:10]}"
+        tl.ch.queue_declare(queue=tl.reply, auto_delete=True)
+        tl.ch.queue_bind(exchange="tpu.direct", queue=tl.reply, routing_key=tl.reply)
+        tl.res = {}
 
         def on_msg(ch, m, p, body):
             try:
                 d = json.loads(body)
-                self.res[d.get("id")] = d
+                tl.res[d.get("id")] = d
             except Exception:
                 pass
 
-        self.ch.basic_consume(queue=self.reply, on_message_callback=on_msg, auto_ack=True)
+        tl.ch.basic_consume(queue=tl.reply, on_message_callback=on_msg, auto_ack=True)
 
     def _call(self, frame):
         import pika
 
+        tl = self._tl
+        if not hasattr(tl, "conn"):
+            self._connect()
         H, W = frame.shape[:2]
         s = min(1.0, self.send_size / max(H, W))
         small = cv2.resize(frame, (int(W * s), int(H * s)), interpolation=cv2.INTER_AREA) if s < 1 else frame
         ok, jpg = cv2.imencode(".jpg", small, [cv2.IMWRITE_JPEG_QUALITY, self.quality])
         rid = uuid.uuid4().hex
-        hdr = {"dozor_model": self.model_key, "dozor_reply": self.reply, "dozor_id": rid,
+        hdr = {"dozor_model": self.model_key, "dozor_reply": tl.reply, "dozor_id": rid,
                "dozor_conf": str(self.conf), "dozor_w": str(W), "dozor_h": str(H)}
         if self.classes is not None:
             hdr["dozor_classes"] = json.dumps(self.classes)
         t0 = time.perf_counter()
-        self.ch.basic_publish(exchange="tpu.direct", routing_key=f"dozor_{self.login}", body=jpg.tobytes(),
-                              properties=pika.BasicProperties(headers=hdr))
+        tl.ch.basic_publish(exchange="tpu.direct", routing_key=f"dozor_{self.login}", body=jpg.tobytes(),
+                            properties=pika.BasicProperties(headers=hdr))
         end = time.monotonic() + self.timeout
-        while rid not in self.res:
+        while rid not in tl.res:
             if time.monotonic() > end:
                 raise TimeoutError("посредник на стенде LinQ не ответил (запущен ли linq/relay.py?)")
-            self.conn.process_data_events(time_limit=0.003)
-        d = self.res.pop(rid)
+            tl.conn.process_data_events(time_limit=0.003)
+        d = tl.res.pop(rid)
         if "error" in d:
             raise RuntimeError(f"посредник: {d['error']}")
         rt = (time.perf_counter() - t0) * 1000
         t = d.get("t", {})
-        self.last_timing = {"total_ms": rt, "net_ms": rt, "head_ms": t.get("tpu_infer_ms", 0.0),
+        self._timing.v = {"total_ms": rt, "net_ms": rt, "head_ms": t.get("tpu_infer_ms", 0.0),
                             "tpu_rt_ms": t.get("tpu_rt_ms", 0.0), "relay_ms": t.get("relay_ms", 0.0),
                             "network_ms": rt - t.get("relay_ms", 0.0), "jpeg_kb": len(jpg) / 1024}
         return d["dets"]

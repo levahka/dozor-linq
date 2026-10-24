@@ -257,6 +257,20 @@ def create_app(config_path: str) -> FastAPI:
         core.broadcast({"type": "event_update", "event": rec})
         return rec
 
+    @app.post("/api/notify/test")
+    def notify_test():
+        if not core.notifiers:
+            raise HTTPException(400, "Telegram не настроен: config/secrets.yaml (token, chat_id)")
+        for n in core.notifiers:
+            n.send({"id": 0, "type": "test", "title": "Проверка связи: ДОЗОР на связи", "severity": "warning",
+                    "camera_name": "—", "camera_id": "—", "area": "", "zone": "", "alert_ts": time.time(),
+                    "info": "Так будут выглядеть тревоги для мастера смены."})
+        return {"ok": True, "chats": sum(len(n.chats) for n in core.notifiers)}
+
+    @app.get("/api/notify")
+    def notify_status():
+        return {"telegram": bool(core.notifiers), "chats": sum(len(n.chats) for n in core.notifiers)}
+
     @app.get("/report")
     def report(hours: float = 12, camera: str = None):
         """Печатный отчёт по охране труда за смену (Ctrl+P → PDF)."""

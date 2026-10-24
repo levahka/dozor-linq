@@ -65,7 +65,7 @@ class Models:
             self.detect = YoloModel(make_runtime(kind, b.get("detect", "models/yolo11n"), **kw_det), "detect",
                                     conf=b.get("detect_conf", 0.25), classes=det_classes)
         # у каждой модели своё соединение/сессия — блокируем по модели, а позу и детектор можно гонять параллельно
-        serial = kind in ("linq", "remote", "rabbit", "relay")
+        serial = kind in ("linq", "remote", "rabbit")   # relay потокобезопасен: у каждого потока своё соединение
         self.locks = {id(self.pose): threading.Lock(), id(self.detect): threading.Lock()} if serial else {}
         self.parallel = kind in ("relay", "rabbit", "remote")   # сетевые бэкенды: ждём оба ответа одновременно
         if self.parallel:

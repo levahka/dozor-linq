@@ -496,6 +496,15 @@ $("#sSave").onclick = async () => {
   }
 };
 
+$("#tgTest").onclick = async () => {
+  try {
+    const r = await api("/api/notify/test", { method: "POST" });
+    $("#sMsg").textContent = `✓ Тестовое сообщение отправлено в Telegram (чатов: ${r.chats})`;
+  } catch (err) {
+    $("#sMsg").textContent = "Telegram не настроен: " + err.message;
+  }
+};
+
 /* ---------------------------------------------------------------- производительность */
 function renderPerf() {
   const m = state.metrics;
@@ -563,6 +572,7 @@ function renderEcon() {
   $("#fCam").innerHTML += state.cameras.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
   $("#fType").innerHTML += state.rules.map((r) => `<option value="${r.type}">${esc(r.title)}</option>`).join("");
   connectWs();
+  api("/api/notify").then((n) => { if (n.telegram) $("#pTg").hidden = false; }).catch(() => {});
   const h = location.hash.slice(1);
   if (h.startsWith("event=")) openEvent(+h.split("=")[1]);
   else if (h) { const b = $(`#tabs [data-tab="${h}"]`); if (b) b.click(); }

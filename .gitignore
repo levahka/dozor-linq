@@ -8,3 +8,4 @@ models/*_linq/
 linq_bench.json
 config/*.tmp
 data/my/
+config/secrets.yaml

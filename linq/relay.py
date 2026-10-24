@@ -167,6 +167,7 @@ def main():
     ap.add_argument("--host", default="localhost")
     ap.add_argument("--pose", default="yolo11n-pose.head_b1_o5_h1m.tpu")
     ap.add_argument("--detect", default="yolo11n.head_b1_o5_h1m.tpu")
+    ap.add_argument("--workers", type=int, default=4, help="параллельных обработчиков (на стенде 16 TPU)")
     a = ap.parse_args()
 
     import pika
@@ -178,6 +179,22 @@ def main():
     io_ = {k: TpuIO(p) for k, p in progs.items()}
     params = pika.ConnectionParameters(a.host, 5672, credentials=pika.PlainCredentials("guest", "guest"),
                                        heartbeat=600, blocked_connection_timeout=300)
+    stats = {"n": 0}
+    import threading
+
+    threads = [threading.Thread(target=serve, args=(k, a, params, progs, io_, stats), daemon=True)
+               for k in range(max(1, a.workers))]
+    for t in threads:
+        t.start()
+    print(f"Посредник ДОЗОР запущен: {len(threads)} обработчиков, очередь dozor_{a.login}, программы {progs}", flush=True)
+    for t in threads:
+        t.join()
+
+
+def serve(k, a, params, progs, io_, stats):
+    import pika
+    from tpu_pycloud_format import (MESSAGE_ID_ATTR_NAME, RESPONSE_ROUTING_KEYS_ATTR_NAME,
+                                    TARGET_URI_ATTR_NAME, PyTask, deserialize, serialize)
 
     # соединение для TPU (синхронные вызовы)
     tconn = pika.BlockingConnection(params)
@@ -214,7 +231,6 @@ def main():
     ch.queue_declare(queue=q, auto_delete=False, arguments={"x-message-ttl": 5000})
     ch.queue_bind(exchange="tpu.direct", queue=q, routing_key=q)
     ch.basic_qos(prefetch_count=1)
-    stats = {"n": 0}
 
     def on_req(chan, method, props, body):
         h = props.headers or {}
@@ -244,12 +260,12 @@ def main():
         except Exception as e:  # noqa: BLE001
             out["error"] = repr(e)
         chan.basic_publish(exchange="tpu.direct", routing_key=h.get("dozor_reply", ""), body=json.dumps(out).encode())
+        chan.basic_ack(method.delivery_tag)
         stats["n"] += 1
         if stats["n"] % 50 == 1:
             print(time.strftime("%H:%M:%S"), "запросов:", stats["n"], out.get("t") or out.get("error"), flush=True)
 
-    ch.basic_consume(queue=q, on_message_callback=on_req, auto_ack=True)
-    print(f"Посредник ДОЗОР запущен: очередь {q}, программы {progs}", flush=True)
+    ch.basic_consume(queue=q, on_message_callback=on_req, auto_ack=False)
     while True:
         conn.process_data_events(time_limit=0.05)
         tconn.process_data_events(time_limit=0)
