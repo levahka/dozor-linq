@@ -165,7 +165,7 @@ function showAlarm(e) {
   $("#alarmOpen").onclick = () => { a.hidden = true; openEvent(e.id); };
   $("#alarmAck").onclick = () => (a.hidden = true);
   clearTimeout(showAlarm.t);
-  showAlarm.t = setTimeout(() => (a.hidden = true), 15000);
+  showAlarm.t = setTimeout(() => (a.hidden = true), 10000);
 }
 
 /* ---------------------------------------------------------------- WebSocket */
@@ -188,7 +188,8 @@ function connectWs() {
       upsert(e);
       renderFeed(e.id);
       beep(e.severity === "critical");
-      if (e.severity === "critical") showAlarm(e);
+      // всплывающее окно — только для угрозы жизни; остальные тревоги видны в ленте и рамкой камеры
+      if (["fall", "immobile", "proximity"].includes(e.type)) showAlarm(e);
     } else if (msg.type === "event_close") {
       state.open.delete(msg.id);
       const e = state.events.find((x) => x.id === msg.id);

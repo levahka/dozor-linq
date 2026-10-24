@@ -257,6 +257,48 @@ def create_app(config_path: str) -> FastAPI:
         core.broadcast({"type": "event_update", "event": rec})
         return rec
 
+    @app.get("/report")
+    def report(hours: float = 12, camera: str = None):
+        """Печатный отчёт по охране труда за смену (Ctrl+P → PDF)."""
+        import html as H
+        t1 = time.time()
+        t0 = t1 - hours * 3600
+        rows = core.db.query(camera, None, None, None, None, t0, t1, 5000, 0)
+        real = [r for r in rows if r["status"] != "false"]
+        f = lambda ts: datetime.fromtimestamp(ts).strftime("%d.%m.%Y %H:%M") if ts else "—"
+        by = {}
+        for r in real:
+            by.setdefault(r["title"], []).append(r)
+        zones = {}
+        for r in real:
+            k = f'{r["camera_name"]}{" / " + r["zone"] if r["zone"] else ""}'
+            zones[k] = zones.get(k, 0) + 1
+        crit = sum(1 for r in real if r["severity"] == "critical")
+        open_n = sum(1 for r in real if r["status"] == "new")
+        lat = [r["alert_ts"] - r["onset_ts"] for r in real if r["onset_ts"]]
+        st = {"new": "не обработано", "confirmed": "подтверждено", "forwarded": "передано мастеру", "false": "ложное"}
+        trs = "".join(
+            f'<tr><td>{r["id"]}</td><td>{f(r["alert_ts"])}</td><td>{H.escape(r["title"])}</td><td>{H.escape(r["camera_name"])}'
+            f'{"<br><small>" + H.escape(r["zone"]) + "</small>" if r["zone"] else ""}</td><td>{st.get(r["status"], r["status"])}</td>'
+            f'<td>{H.escape(r["comment"] or "")}</td><td>{"<img src=/media/" + r["snapshot"] + ">" if r["snapshot"] else ""}</td></tr>'
+            for r in real[:300])
+        types = "".join(f"<li><b>{H.escape(k)}</b> — {len(v)}</li>" for k, v in sorted(by.items(), key=lambda x: -len(x[1])))
+        top = "".join(f"<li>{H.escape(k)} — {n}</li>" for k, n in sorted(zones.items(), key=lambda x: -x[1])[:5])
+        doc = f"""<!doctype html><html lang=ru><meta charset=utf-8><title>Отчёт ДОЗОР за смену</title>
+<style>body{{font-family:Segoe UI,Arial,sans-serif;margin:32px;color:#111}}h1{{margin:0}}.k{{display:flex;gap:16px;margin:16px 0}}
+.k div{{border:1px solid #ccc;border-radius:8px;padding:10px 16px}}.k b{{font-size:26px;display:block}}table{{border-collapse:collapse;width:100%;font-size:13px}}
+td,th{{border:1px solid #ccc;padding:4px 6px;vertical-align:top;text-align:left}}img{{width:120px}}small{{color:#666}}
+@media print{{button{{display:none}}}}</style>
+<button onclick="print()">Печать / сохранить в PDF</button>
+<h1>Отчёт по нарушениям ТБ за смену</h1>
+<p>Период: {f(t0)} — {f(t1)}{" · камера " + H.escape(camera) if camera else ""} · сформирован системой ДОЗОР</p>
+<div class=k><div><b>{len(real)}</b>нарушений</div><div><b>{crit}</b>критичных</div><div><b>{open_n}</b>без реакции</div>
+<div><b>{(sum(lat) / len(lat) if lat else 0):.1f} с</b>среднее время до тревоги</div><div><b>{len(rows) - len(real)}</b>ложных (исключены)</div></div>
+<h3>По типам</h3><ul>{types or "<li>нарушений нет</li>"}</ul><h3>Проблемные места</h3><ol>{top or "<li>—</li>"}</ol>
+<h3>Журнал</h3><table><tr><th>№</th><th>Время</th><th>Нарушение</th><th>Камера / зона</th><th>Реакция</th><th>Комментарий</th><th>Кадр</th></tr>{trs}</table>
+<p><small>Подпись ответственного: ____________________</small></p></html>"""
+        return Response(doc, media_type="text/html; charset=utf-8")
+
     @app.get("/api/stats")
     def stats(days: float = 30):
         return core.db.stats(time.time() - days * 86400)
