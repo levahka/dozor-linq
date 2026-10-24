@@ -21,7 +21,10 @@ if not exist .venv (
 )
 echo.
 echo Запускаю ДОЗОР. Браузер откроется сам, когда сервер будет готов (10-20 секунд).
-.venv\Scripts\python.exe -m sv.server --port 8000 --open
+set "CFG=config\config.yaml"
+if exist data\my\demo\cam_fall.mp4 set "CFG=config\config_team.yaml"
+echo Конфигурация: %CFG%
+.venv\Scripts\python.exe -m sv.server --config %CFG% --port 8000 --open
 pause
 goto :eof
 

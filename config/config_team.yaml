@@ -1,0 +1,126 @@
+# Демо на роликах команды (data/my/demo, в git не попадают). run.bat берёт этот файл, если ролики есть.
+backend:
+  kind: cpu
+  pose: models/yolo11n-pose
+  detect: models/yolo11n
+  pose_conf: 0.2
+  detect_conf: 0.25
+  detect_classes:
+  - 0
+  - 2
+  - 3
+  - 5
+  - 6
+  - 7
+  - 67
+  tpu_programs:
+    pose: models/yolo11n-pose.head_b1_o5_h1m.tpu
+    detect: models/yolo11n.head_b1_o5_h1m.tpu
+  remote_url: http://10.0.114.10:8765
+  rabbit:
+    host: 10.0.114.30
+    login: hackathon27139
+    timeout: 30
+notify:
+  telegram:
+    token: ''
+    chat_id: ''
+    base_url: ''
+cameras:
+- id: cam_fall
+  name: Цех 1 — проход у стены
+  area: Цех 1
+  source: data/my/demo/cam_fall.mp4
+  loop: true
+  detect_every: 2
+  zones: []
+  rules:
+    fall:
+      enabled: true
+    immobile:
+      enabled: true
+      window_s: 6
+    running:
+      enabled: true
+    phone:
+      enabled: true
+    proximity:
+      enabled: true
+- id: cam_zone
+  name: Цех 1 — опасная зона
+  area: Цех 1
+  source: data/my/demo/cam_zone.mp4
+  loop: true
+  detect_every: 2
+  zones:
+  - id: z1
+    name: Разметка у стены
+    kind: danger
+    severity: critical
+    polygon:
+    - - 0.0
+      - 0.66
+    - - 1.0
+      - 0.85
+    - - 1.0
+      - 1.0
+    - - 0.86
+      - 1.0
+    - - 0.0
+      - 0.79
+    schedule: null
+  rules:
+    fall:
+      enabled: true
+    immobile:
+      enabled: true
+      window_s: 6
+    running:
+      enabled: true
+    phone:
+      enabled: true
+    proximity:
+      enabled: true
+    zone:
+      enabled: true
+- id: cam_gallery
+  name: Галерея — проход
+  area: Цех 2
+  source: data/my/demo/cam_gallery.mp4
+  loop: true
+  detect_every: 2
+  zones: []
+  rules:
+    fall:
+      enabled: true
+    immobile:
+      enabled: true
+      window_s: 6
+    running:
+      enabled: true
+    phone:
+      enabled: true
+    proximity:
+      enabled: true
+- id: cam_parking
+  name: Парковка у цеха
+  area: Склад
+  source: data/my/demo/cam_parking.mp4
+  loop: true
+  detect_every: 1
+  zones: []
+  rules:
+    fall:
+      enabled: true
+    immobile:
+      enabled: true
+      window_s: 6
+    running:
+      enabled: true
+    phone:
+      enabled: true
+    proximity:
+      enabled: true
+      require_moving: false
+      cooldown_any: true
+      cooldown_s: 90

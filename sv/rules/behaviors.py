@@ -181,7 +181,7 @@ class PhoneRule(Rule):
     title = "Использование телефона"
     severity = "warning"
     defaults = dict(confirm_s=2.0, confirm_ratio=0.6, clear_s=4.0, cooldown_s=120.0,
-                    near=0.22, min_conf=0.25, pose=True, text_wy=0.5, text_wd=0.6, call_head=0.45, walk_h=0.3, zones=[])
+                    near=0.22, min_conf=0.25, pose=True, text_wy=0.5, text_wd=0.6, call_head=0.45, walk_h=0.3, pose_min_h=0.22, zones=[])
 
     @staticmethod
     def posture(d, p):
@@ -230,9 +230,10 @@ class PhoneRule(Rule):
             # рост в кадре должен заметно измениться (≥8% за секунду), иначе это дрожание рамки
             # и точка ног должна сдвинуться вместе с ростом: идущий к камере «опускается» в кадре,
             # а у рамки, которая просто раздулась, низ стоит на месте
-            dfoot = abs(np.median(f[B][:, 1]) - np.median(f[A][:, 1]))
-            dep = 0.0 if cut[A | B].any() or abs(hb - ha) < 0.08 * ha or dfoot < 0.5 * abs(hb - ha) \
-                else fw * abs(1 / hb - 1 / ha)
+            # к камере: рост в кадре больше и ноги ниже; от камеры: меньше и выше. Иначе это качнулась камера
+            dfy = np.median(f[B][:, 1]) - np.median(f[A][:, 1])
+            dep = 0.0 if cut[A | B].any() or abs(hb - ha) < 0.08 * ha or dfy * (hb - ha) <= 0 \
+                or abs(dfy) < 0.5 * abs(hb - ha) else fw * abs(1 / hb - 1 / ha)
             if math.hypot(lat, dep) >= self.p["walk_h"]:
                 return True
         return False
@@ -254,7 +255,7 @@ class PhoneRule(Rule):
                     continue
                 hit = f"телефон {ph.score:.2f}"
                 break
-            if hit is None and self.p["pose"] and d.h >= 0.12 * ctx.H and self._walked(ctx, d):
+            if hit is None and self.p["pose"] and d.h >= self.p["pose_min_h"] * ctx.H and self._walked(ctx, d):
                 hit = self.posture(d, self.p)
             if hit:
                 out.append(Signal(str(d.track_id), d, info=hit))

@@ -21,7 +21,10 @@ if not exist .venv (
 )
 echo.
 echo Запускаю ДОЗОР в режиме LinQ (нужен VPN хакатона). Браузер откроется сам, когда сервер будет готов (10-20 секунд).
-.venv\Scripts\python.exe -m sv.server --config config\config_linq.yaml --port 8000 --open
+set "CFG=config\config_linq.yaml"
+if exist data\my\demo\cam_fall.mp4 set "CFG=config\config_linq_team.yaml"
+echo Конфигурация: %CFG%
+.venv\Scripts\python.exe -m sv.server --config %CFG% --port 8000 --open
 pause
 goto :eof
 

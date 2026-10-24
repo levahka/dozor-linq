@@ -265,14 +265,15 @@ class EventEngine:
 
     def _cooling(self, rule: Rule, k, s: Signal, t: float) -> bool:
         cd = rule.p["cooldown_s"]
-        # тот же субъект или почти та же рамка (трек мог смениться) — молчим
+        # тот же субъект или почти та же рамка (трек мог смениться) — молчим;
+        # cooldown_any: после события это правило на камере молчит cooldown_s для всех (например, стоянка)
         for ev in self.recent:
             if ev.rule != rule.type or t - ev.closed_t > cd:
                 continue
-            if ev.key == s.key or self._iou(ev.box, s.det.box) > 0.4:
+            if ev.key == s.key or self._iou(ev.box, s.det.box) > 0.4 or rule.p.get("cooldown_any"):
                 return True
         for ok, ev in self.open.items():
-            if ok[0] == rule.type and self._iou(ev.box, s.det.box) > 0.5:
+            if ok[0] == rule.type and (self._iou(ev.box, s.det.box) > 0.5 or rule.p.get("cooldown_any")):
                 ev.last_t = t      # это продолжение уже открытого события
                 return True
         return False
