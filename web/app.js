@@ -246,6 +246,7 @@ function journalQuery() {
   const v = (id) => $(id).value;
   if (v("#fCam")) p.set("camera", v("#fCam"));
   if (v("#fType")) p.set("type", v("#fType"));
+  if (v("#fZone")) p.set("zone", v("#fZone"));
   if (v("#fStatus")) p.set("status", v("#fStatus"));
   if (v("#fSev")) p.set("severity", v("#fSev"));
   if (v("#fFrom")) p.set("ts_from", new Date(v("#fFrom")).getTime() / 1000);
@@ -571,6 +572,7 @@ function renderEcon() {
   renderFeed();
   $("#fCam").innerHTML += state.cameras.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
   $("#fType").innerHTML += state.rules.map((r) => `<option value="${r.type}">${esc(r.title)}</option>`).join("");
+  api("/api/zones").then((zs) => { $("#fZone").innerHTML += zs.map((z) => `<option value="${esc(z)}">${esc(z)}</option>`).join(""); }).catch(() => {});
   connectWs();
   api("/api/notify").then((n) => { if (n.telegram) $("#pTg").hidden = false; }).catch(() => {});
   const h = location.hash.slice(1);

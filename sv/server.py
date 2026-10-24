@@ -76,8 +76,19 @@ class App:
         snap = clip = None
         if frame is not None:
             snap, clip = worker.save_evidence(f"{cam['id']}_{int(ev.alert_t)}_{_uuid.uuid4().hex[:6]}", frame, sig.det, title)
+        zone = sig.zone
+        if not zone and frame is not None:   # падение, бег и т.п. тоже привязываем к зоне, если человек в ней
+            H, W = frame.shape[:2]
+            bx = sig.det.box
+            for z in getattr(worker, "zones", []):
+                try:
+                    if z.contains(float((bx[0] + bx[2]) / 2), float(bx[3]), W, H):
+                        zone = z.name
+                        break
+                except Exception:
+                    pass
         eid = self.db.add(camera_id=cam["id"], camera_name=cam.get("name", cam["id"]), area=cam.get("area", ""),
-                          zone=sig.zone, type=rule.type, title=title, severity=rule.severity,
+                          zone=zone, type=rule.type, title=title, severity=rule.severity,
                           track_id=sig.det.track_id, info=sig.info, onset_ts=ev.onset_t, alert_ts=ev.alert_t,
                           snapshot=os.path.basename(snap) if snap else None,
                           clip=os.path.basename(clip) if clip else None)
@@ -154,6 +165,12 @@ def create_app(config_path: str) -> FastAPI:
         return FileResponse(os.path.join(ROOT, "web", "index.html"))
 
     # ------------------------------------------------------------ камеры
+    @app.get("/api/zones")
+    def zones():
+        names = {z.get("name") for c in core.cfg.get("cameras", []) for z in c.get("zones", []) if z.get("name")}
+        names |= {r["zone"] for r in core.db.query(None, None, None, None, None, None, None, 5000, 0) if r.get("zone")}
+        return sorted(names)
+
     @app.get("/api/cameras")
     def cameras():
         out = []
