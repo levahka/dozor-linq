@@ -52,13 +52,20 @@ class Models:
                           timeout=r.get("timeout", 10.0), raw=r.get("raw", True))
             kw_pose = dict(tpu_program=b["tpu_programs"]["pose"], **common)
             kw_det = dict(tpu_program=b["tpu_programs"]["detect"], **common)
-        self.pose = YoloModel(make_runtime(kind, b.get("pose", "models/yolo11n-pose"), **kw_pose), "pose",
-                              conf=b.get("pose_conf", 0.2))
         det_classes = b.get("detect_classes")  # None — все
-        self.detect = YoloModel(make_runtime(kind, b.get("detect", "models/yolo11n"), **kw_det), "detect",
-                                conf=b.get("detect_conf", 0.25), classes=det_classes)
+        if kind == "relay":   # быстрый режим: посредник linq/relay.py на стенде LinQ
+            from .infer.relay_client import RelayYolo
+            r = b.get("rabbit", {})
+            common = dict(host=r.get("host", "10.0.114.30"), login=r["login"], timeout=r.get("timeout", 10.0))
+            self.pose = RelayYolo("pose", conf=b.get("pose_conf", 0.2), **common)
+            self.detect = RelayYolo("detect", conf=b.get("detect_conf", 0.25), classes=det_classes, **common)
+        else:
+            self.pose = YoloModel(make_runtime(kind, b.get("pose", "models/yolo11n-pose"), **kw_pose), "pose",
+                                  conf=b.get("pose_conf", 0.2))
+            self.detect = YoloModel(make_runtime(kind, b.get("detect", "models/yolo11n"), **kw_det), "detect",
+                                    conf=b.get("detect_conf", 0.25), classes=det_classes)
         # один ускоритель — сериализуем доступ; на CPU onnxruntime сам потокобезопасен
-        self.lock = threading.Lock() if kind in ("linq", "remote", "rabbit") else None
+        self.lock = threading.Lock() if kind in ("linq", "remote", "rabbit", "relay") else None
 
     def run(self, model: YoloModel, frame):
         if self.lock:
