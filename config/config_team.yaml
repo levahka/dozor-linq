@@ -56,33 +56,46 @@ cameras:
   - id: z1
     name: Разметка у стены
     kind: danger
-    severity: critical
+    severity: warning
     polygon:
-    - - 0.0
-      - 0.66
-    - - 1.0
-      - 0.85
-    - - 1.0
-      - 1.0
+    - - 0.0049
+      - 0.6376
+    - - 0.9893
+      - 0.8987
+    - - 1
+      - 1
     - - 0.86
-      - 1.0
-    - - 0.0
-      - 0.79
-    schedule: null
+      - 1
+    - - 0.6459
+      - 0.999
+    - - 0.0136
+      - 0.7863
+    - - 0.0136
+      - 0.7068
+    schedule:
+      from: 00:33
+      to: 00:33
+      days:
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
   rules:
     fall:
       enabled: true
     immobile:
-      enabled: true
+      enabled: false
       window_s: 6
     running:
-      enabled: true
+      enabled: false
     phone:
       enabled: true
     proximity:
       enabled: true
     zone:
-      enabled: true
+      enabled: false
 - id: cam_gallery
   name: Галерея — проход
   area: Цех 2

@@ -1,24 +1,24 @@
 {
   "pose": {
-    "total_ms": 646.8,
-    "network_ms": 235.4,
-    "relay_ms": 411.4,
-    "tpu_rt_ms": 388.6,
-    "head_ms": 31.8,
-    "jpeg_kb": 29.3,
-    "p95_total_ms": 1146.2,
-    "fps": 1.55,
+    "total_ms": 2086.7,
+    "network_ms": 1974.1,
+    "relay_ms": 112.6,
+    "tpu_rt_ms": 96.6,
+    "head_ms": 34.4,
+    "jpeg_kb": 29.5,
+    "p95_total_ms": 3833.0,
+    "fps": 0.48,
     "box_match_vs_cpu": 1.0
   },
   "detect": {
-    "total_ms": 680.0,
-    "network_ms": 288.3,
-    "relay_ms": 391.7,
-    "tpu_rt_ms": 364.6,
-    "head_ms": 9.0,
-    "jpeg_kb": 29.3,
-    "p95_total_ms": 1090.4,
-    "fps": 1.47,
+    "total_ms": 2079.3,
+    "network_ms": 1962.0,
+    "relay_ms": 117.3,
+    "tpu_rt_ms": 95.3,
+    "head_ms": 33.5,
+    "jpeg_kb": 29.5,
+    "p95_total_ms": 3079.6,
+    "fps": 0.48,
     "box_match_vs_cpu": 1.0
   }
 }
