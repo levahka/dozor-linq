@@ -129,6 +129,20 @@
         <input type="number" id="capFps" value="5" min="1" max="30" style="width:56px"> кадров/с на камеру.</p>
       <div id="capacity"></div>
     </div>
+    <div class="card">
+      <h3>Экономика внедрения</h3>
+      <div class="econ">
+        <label>Камер на предприятии <input type="number" id="eCams" value="100" min="1"></label>
+        <label>Камер на одного оператора <input type="number" id="ePerOp" value="16" min="1"></label>
+        <label>Зарплата оператора, ₽/мес <input type="number" id="eSalary" value="75000" step="5000"></label>
+        <label>Стоимость узла LinQ с сервером, ₽ <input type="number" id="eNode" value="600000" step="50000"></label>
+        <label>Внедрение и настройка, ₽ <input type="number" id="eSetup" value="1000000" step="100000"></label>
+        <label>Доля операторов, которых высвобождает система, % <input type="number" id="eFree" value="50" min="0" max="100"></label>
+      </div>
+      <div id="econ"></div>
+      <p class="hint">Зарплата — медиана по вакансиям «оператор видеонаблюдения» в Москве (hh.ru, октябрь 2026). Круглосуточный пост = 4,2 ставки, начисления на ФОТ 30 %.
+        Цена узла LinQ — допущение, уточняется у производителя. Не учтены главные эффекты: предотвращённые травмы, штрафы, простои.</p>
+    </div>
   </section>
 </main>
 

@@ -174,3 +174,7 @@ svg text { fill: var(--muted); font-size: 11px; }
   .modal-box { grid-template-columns: 1fr; }
   .tabs { overflow-x: auto; }
 }
+
+.econ { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+.econ label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 12px; }
+@media (max-width: 1100px) { .econ { grid-template-columns: 1fr; } }

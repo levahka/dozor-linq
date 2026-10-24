@@ -25,7 +25,7 @@ $$("#tabs button").forEach((b) =>
     if (tab === "journal") loadJournal();
     if (tab === "analytics") loadStats();
     if (tab === "setup") setupInit();
-    if (tab === "perf") renderPerf();
+    if (tab === "perf") { renderPerf(); renderEcon(); }
     location.hash = tab;
   })
 );
@@ -520,13 +520,36 @@ function renderPerf() {
   const det = avg((c) => c.detect_timing.head_ms ?? c.detect_timing.net_ms ?? 0);
   const perFrame = pose + det / every;
   const camsPerNode = perFrame ? Math.floor(1000 / (perFrame * rate)) : 0;
+  if (linq && camsPerNode) lastCamsPerNode = Math.max(1, Math.floor(camsPerNode * 0.7));   // запас 30 %
   $("#capacity").innerHTML = `<div class="kpis">
     <div class="kpi"><div class="v">${perFrame.toFixed(1)} мс</div><div class="l">нейросети на 1 кадр (поза + детектор/${every.toFixed(0)})</div></div>
     <div class="kpi acc"><div class="v">${camsPerNode}</div><div class="l">камер на один ${linq ? "ускоритель LinQ" : "CPU-узел"} при ${rate} к/с</div></div>
     <div class="kpi"><div class="v">${camsPerNode ? Math.ceil(100 / camsPerNode) : "—"}</div><div class="l">узлов на цех со 100 камерами</div></div></div>
     <p class="hint">Пред- и постобработка (letterbox, NMS, трекинг, правила) идут на CPU хоста параллельно с TPU и в расчёт ёмкости ускорителя не входят.</p>`;
 }
-$("#capFps").addEventListener("input", renderPerf);
+$("#capFps").addEventListener("input", () => { renderPerf(); renderEcon(); });
+
+/* экономика: сколько узлов LinQ и операторов нужно, окупаемость */
+let lastCamsPerNode = 0;
+function renderEcon() {
+  const v = (id) => +$(id).value || 0;
+  const cams = v("#eCams"), perOp = Math.max(1, v("#ePerOp")), salary = v("#eSalary"), node = v("#eNode"), setup = v("#eSetup"), free = v("#eFree") / 100;
+  const perNode = lastCamsPerNode || 10;
+  const nodes = Math.ceil(cams / perNode);
+  const posts = Math.ceil(cams / perOp);
+  const opYear = posts * 4.2 * salary * 1.3 * 12;
+  const capex = nodes * node + setup;
+  const save = opYear * free;
+  const payback = save > 0 ? capex / (save / 12) : Infinity;
+  const fmt = (x) => (x >= 1e6 ? (x / 1e6).toFixed(1) + " млн ₽" : Math.round(x / 1e3) + " тыс ₽");
+  $("#econ").innerHTML = `<div class="kpis">
+    <div class="kpi"><div class="v">${nodes}</div><div class="l">узлов LinQ (по ${perNode} камер на узел — из живых замеров)</div></div>
+    <div class="kpi"><div class="v">${fmt(capex)}</div><div class="l">вложения: оборудование + внедрение</div></div>
+    <div class="kpi"><div class="v">${posts} пост. / ${fmt(opYear)}</div><div class="l">круглосуточных постов операторов и их стоимость в год сейчас</div></div>
+    <div class="kpi acc"><div class="v">${fmt(save)}</div><div class="l">экономия в год (операторы работают с событиями, а не со стеной экранов)</div></div>
+    <div class="kpi acc"><div class="v">${isFinite(payback) ? payback.toFixed(1) + " мес" : "—"}</div><div class="l">окупаемость</div></div></div>`;
+}
+["#eCams", "#ePerOp", "#eSalary", "#eNode", "#eSetup", "#eFree"].forEach((id) => $(id).addEventListener("input", renderEcon));
 
 /* ---------------------------------------------------------------- старт */
 (async function init() {

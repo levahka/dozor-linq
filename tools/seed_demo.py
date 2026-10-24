@@ -29,8 +29,21 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--days", type=int, default=30)
     ap.add_argument("--clear", action="store_true")
+    ap.add_argument("--clear-live", action="store_true", help="удалить все НЕ демо-события (перед показом) и их кадры")
     a = ap.parse_args()
     db = Storage(os.path.join(ROOT, "data", "events.db"))
+    if a.clear_live:
+        with db.lock:
+            n = db.db.execute("DELETE FROM events WHERE info IS NULL OR info NOT LIKE '[демо]%'").rowcount
+            db.db.commit()
+        media = os.path.join(ROOT, "data", "media")
+        for f in os.listdir(media) if os.path.isdir(media) else []:
+            try:
+                os.remove(os.path.join(media, f))
+            except OSError:
+                pass
+        print("удалено живых событий:", n)
+        return
     if a.clear:
         with db.lock:
             n = db.db.execute("DELETE FROM events WHERE info LIKE '[демо]%'").rowcount

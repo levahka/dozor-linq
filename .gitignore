@@ -7,3 +7,4 @@ data/replay_media/
 models/*_linq/
 linq_bench.json
 config/*.tmp
+data/my/

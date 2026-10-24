@@ -70,15 +70,17 @@ class App:
         title = rule.title
         if rule.type == "fall" and sig.info == "человек лежит":
             title = "Человек лежит на полу"
-        eid = self.db.add(camera_id=cam["id"], camera_name=cam.get("name", cam["id"]), area=cam.get("area", ""),
-                          zone=sig.zone, type=rule.type, title=title, severity=rule.severity,
-                          track_id=sig.det.track_id, info=sig.info, onset_ts=ev.onset_t, alert_ts=ev.alert_t)
+        # сначала доказательства (кадр, фрагмент), потом запись — в журнале не бывает событий без картинки
+        import uuid as _uuid
         frame = getattr(worker, "_cur_frame", None)
         snap = clip = None
         if frame is not None:
-            snap, clip = worker.save_evidence(eid, frame, sig.det, title)
-        self.db.update(eid, snapshot=os.path.basename(snap) if snap else None,
-                       clip=os.path.basename(clip) if clip else None)
+            snap, clip = worker.save_evidence(f"{cam['id']}_{int(ev.alert_t)}_{_uuid.uuid4().hex[:6]}", frame, sig.det, title)
+        eid = self.db.add(camera_id=cam["id"], camera_name=cam.get("name", cam["id"]), area=cam.get("area", ""),
+                          zone=sig.zone, type=rule.type, title=title, severity=rule.severity,
+                          track_id=sig.det.track_id, info=sig.info, onset_ts=ev.onset_t, alert_ts=ev.alert_t,
+                          snapshot=os.path.basename(snap) if snap else None,
+                          clip=os.path.basename(clip) if clip else None)
         rec = self.db.get(eid)
         rec["snapshot_path"] = snap
         for n in self.notifiers:
