@@ -564,7 +564,9 @@ function renderEcon() {
 
 /* ---------------------------------------------------------------- старт */
 (async function init() {
-  [state.cameras, state.rules, state.events] = await Promise.all([api("/api/cameras"), api("/api/rules"), api("/api/events?limit=100")]);
+  [state.cameras, state.rules, state.events] = await Promise.all([api("/api/cameras"), api("/api/rules"), api("/api/events?limit=300")]);
+  // в ленте мониторинга — только живые события; демо-история видна в журнале и аналитике
+  state.events = state.events.filter((e) => !(e.info || "").startsWith("[демо]")).slice(0, 100);
   // открытые сейчас события: без end_ts и моложе часа
   const now = Date.now() / 1000;
   state.events.filter((e) => !e.end_ts && now - e.alert_ts < 3600).forEach((e) => state.open.add(e.id));
