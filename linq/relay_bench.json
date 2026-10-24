@@ -1,0 +1,24 @@
+{
+  "pose": {
+    "total_ms": 646.8,
+    "network_ms": 235.4,
+    "relay_ms": 411.4,
+    "tpu_rt_ms": 388.6,
+    "head_ms": 31.8,
+    "jpeg_kb": 29.3,
+    "p95_total_ms": 1146.2,
+    "fps": 1.55,
+    "box_match_vs_cpu": 1.0
+  },
+  "detect": {
+    "total_ms": 680.0,
+    "network_ms": 288.3,
+    "relay_ms": 391.7,
+    "tpu_rt_ms": 364.6,
+    "head_ms": 9.0,
+    "jpeg_kb": 29.3,
+    "p95_total_ms": 1090.4,
+    "fps": 1.47,
+    "box_match_vs_cpu": 1.0
+  }
+}

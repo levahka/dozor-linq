@@ -64,14 +64,20 @@ class Models:
                                   conf=b.get("pose_conf", 0.2))
             self.detect = YoloModel(make_runtime(kind, b.get("detect", "models/yolo11n"), **kw_det), "detect",
                                     conf=b.get("detect_conf", 0.25), classes=det_classes)
-        # один ускоритель — сериализуем доступ; на CPU onnxruntime сам потокобезопасен
-        self.lock = threading.Lock() if kind in ("linq", "remote", "rabbit", "relay") else None
+        # у каждой модели своё соединение/сессия — блокируем по модели, а позу и детектор можно гонять параллельно
+        serial = kind in ("linq", "remote", "rabbit", "relay")
+        self.locks = {id(self.pose): threading.Lock(), id(self.detect): threading.Lock()} if serial else {}
+        self.parallel = kind in ("relay", "rabbit", "remote")   # сетевые бэкенды: ждём оба ответа одновременно
+        if self.parallel:
+            from concurrent.futures import ThreadPoolExecutor
+            self.pool = ThreadPoolExecutor(max_workers=4)
 
-    def run(self, model: YoloModel, frame):
-        if self.lock:
-            with self.lock:
-                return model(frame)
-        return model(frame)
+    def run(self, model, frame):
+        lk = self.locks.get(id(model))
+        if lk:
+            with lk:
+                return model(frame), dict(model.last_timing)
+        return model(frame), dict(model.last_timing)
 
 
 # ------------------------------------------------------------------ источник кадров
@@ -304,16 +310,22 @@ class CameraWorker(threading.Thread):
     def process(self, frame, ts: float, render: bool = True):
         self._n += 1
         n = self._n
-        persons = self.models.run(self.models.pose, frame)
-        self._pose_t = dict(self.models.pose.last_timing)
         every = int(self.cam.get("detect_every", 2))
-        if every <= 1 or n % every == 1:
-            raw = self.models.run(self.models.detect, frame)
+        need_det = every <= 1 or n % every == 1
+        M = self.models
+        if need_det and M.parallel:
+            fd = M.pool.submit(M.run, M.detect, frame)
+            persons, self._pose_t = M.run(M.pose, frame)
+            raw, det_t = fd.result()
+        else:
+            persons, self._pose_t = M.run(M.pose, frame)
+            raw, det_t = (M.run(M.detect, frame) if need_det else (None, None))
+        if need_det:
             objs = [d for d in raw if d.label != "person"]
             self._objects = self.objects_tr.update(objs, ts)
             self._object_speed(self._objects, ts)
-            self.metrics["detect_ms"] = self.models.detect.last_timing.get("total_ms", 0)
-            self.metrics["detect_timing"] = dict(self.models.detect.last_timing)
+            self.metrics["detect_ms"] = det_t.get("total_ms", 0)
+            self.metrics["detect_timing"] = det_t
         objects = self._objects
         persons = self.persons_tr.update(persons, ts)
         fall_p = (self.cam.get("rules") or {}).get("fall") or {}

@@ -58,9 +58,9 @@ function updateCamBadges() {
     $('[data-m="lat"]', el).textContent = `${cm.latency_ms.toFixed(0)} мс`;
     $('[data-m="ppl"]', el).textContent = `👤 ${cm.persons}`;
   }
-  const linq = m.backend === "linq" || m.backend === "remote";
+  const linq = ["linq", "remote", "rabbit", "relay"].includes(m.backend);
   const pb = $("#pBackend");
-  pb.textContent = linq ? "LinQ TPU" : m.backend === "split" ? "CPU (разрез head/tail)" : "CPU";
+  pb.textContent = linq ? (m.backend === "relay" || m.backend === "rabbit" ? "LinQ TPU · облачный стенд" : "LinQ TPU") : m.backend === "split" ? "CPU (разрез head/tail)" : "CPU";
   pb.classList.toggle("linq", linq);
   $("#pFps").textContent = `${m.total_fps.toFixed(1)} к/с всего`;
 }
@@ -502,17 +502,17 @@ function renderPerf() {
   const cams = Object.entries(m.cameras);
   const avg = (f) => (cams.length ? cams.reduce((a, [, c]) => a + f(c), 0) / cams.length : 0);
   const name = (id) => (state.cameras.find((c) => c.id === id) || {}).name || id;
-  const linq = m.backend === "linq" || m.backend === "remote";
+  const linq = ["linq", "remote", "rabbit", "relay"].includes(m.backend);
   $("#perfKpis").innerHTML = `
     <div class="kpi ${linq ? "acc" : ""}"><div class="v" style="font-size:20px">${linq ? "LinQ TPU" : "CPU (" + m.backend + ")"}</div><div class="l">вычислитель нейросетей · ${esc(m.host)}</div></div>
     <div class="kpi"><div class="v">${m.total_fps.toFixed(1)}</div><div class="l">кадров/с обрабатывается суммарно</div></div>
     <div class="kpi"><div class="v">${avg((c) => c.latency_ms).toFixed(0)} мс</div><div class="l">средняя задержка кадр → решение</div></div>
-    <div class="kpi"><div class="v">${avg((c) => (c.pose_timing.head_ms ?? c.pose_timing.net_ms ?? 0)).toFixed(1)} мс</div><div class="l">нейросеть позы (${linq ? "на TPU" : "на CPU"})</div></div>`;
+    <div class="kpi"><div class="v">${avg((c) => (c.pose_timing.head_ms ?? c.pose_timing.net_ms ?? 0)).toFixed(1)} мс</div><div class="l">расчёт нейросети позы (${linq ? "на LinQ TPU" : "на CPU"})</div></div>`;
   const t = (o, k) => (o && o[k] != null ? o[k].toFixed(1) : "—");
-  $("#perfTable").innerHTML = `<tr><th>Камера</th><th>Источник, к/с</th><th>Обработка, к/с</th><th>Задержка, мс</th><th>Поза: пред / сеть / пост</th><th>Head (TPU) / tail (CPU)</th><th>Детектор, мс</th><th>Людей</th><th>Кадров</th></tr>` +
+  $("#perfTable").innerHTML = `<tr><th>Камера</th><th>Источник, к/с</th><th>Обработка, к/с</th><th>Задержка, мс</th><th>Поза: пред / сеть / пост</th><th>${linq ? "Расчёт на TPU / сеть до стенда" : "Head / tail"}</th><th>Детектор, мс</th><th>Людей</th><th>Кадров</th></tr>` +
     cams.map(([id, c]) => `<tr><td>${esc(name(id))}</td><td>${(c.src_fps || 0).toFixed(0)}</td><td>${c.fps.toFixed(1)}</td><td>${c.latency_ms.toFixed(0)}</td>
       <td>${t(c.pose_timing, "pre_ms")} / ${t(c.pose_timing, "net_ms")} / ${t(c.pose_timing, "post_ms")}</td>
-      <td>${t(c.pose_timing, "head_ms")} / ${t(c.pose_timing, "tail_ms")}</td><td>${c.detect_ms.toFixed(1)}</td><td>${c.persons}</td><td>${c.frames}</td></tr>`).join("");
+      <td>${t(c.pose_timing, "head_ms")} / ${c.pose_timing.network_ms != null ? t(c.pose_timing, "network_ms") : t(c.pose_timing, "tail_ms")}</td><td>${c.detect_ms.toFixed(1)}</td><td>${c.persons}</td><td>${c.frames}</td></tr>`).join("");
   // ёмкость узла: время нейросетей на 1 кадр камеры
   const rate = +$("#capFps").value || 5;
   const every = cams.length ? cams.reduce((a, [id]) => a + (+(state.cameras.find((x) => x.id === id) || {}).detect_every || 2), 0) / cams.length : 2;

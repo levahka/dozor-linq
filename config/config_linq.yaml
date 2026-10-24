@@ -1,0 +1,65 @@
+# РЕЖИМ LinQ: нейросети считаются на облачном ускорителе LinQ через посредника linq/relay.py.
+# Нужны: VPN хакатона и запущенный relay.py на стенде. Запуск: run_linq.bat
+# Конфигурация системы. Камеры, зоны и параметры правил также правятся из веб-интерфейса
+# (вкладка «Камеры и зоны») — тогда файл перезаписывается (комментарии пропадут, это нормально).
+
+backend:
+  # cpu    — полная модель в onnxruntime (работает на любом ноутбуке)
+  # split  — head+tail в onnxruntime (проверка разреза под TPU)
+  # linq   — head на LinQ TPU (pytpu локально), tail на CPU
+  # remote — head на LinQ TPU через linq/tpu_server.py на машине с ускорителем
+  # rabbit — head на облачном LinQ организаторов через RabbitMQ (нужен VPN хакатона)
+  kind: relay
+  pose: models/yolo11n-pose          # путь без расширения
+  detect: models/yolo11n
+  pose_conf: 0.2
+  detect_conf: 0.25
+  # классы COCO, которые нужны правилам: человек, машина, мотоцикл, автобус, поезд, грузовик, телефон
+  detect_classes: [0, 2, 3, 5, 6, 7, 67]
+  tpu_programs:
+    pose: models/yolo11n-pose.head_b1_o5_h1m.tpu
+    detect: models/yolo11n.head_b1_o5_h1m.tpu
+  remote_url: http://10.0.114.10:8765
+  rabbit:
+    host: 10.0.114.30            # hackathon.lin-q.ru внутри VPN
+    login: hackathon27139        # логин Jupyter: программы .tpu лежат в /auto/cache/<login>/
+    timeout: 15
+
+notify:
+  telegram:
+    token: ""        # или переменная окружения SV_TG_TOKEN
+    chat_id: ""      # или SV_TG_CHAT
+    base_url: ""     # адрес веб-интерфейса для ссылки в сообщении
+
+cameras:
+  - id: cam01
+    name: Цех 1 — пролёт А
+    area: Цех 1
+    source: data/ceh1_worker_zone.mp4   # RTSP: rtsp://user:pass@ip:554/stream ; папка с кадрами ; 0 — веб-камера
+    loop: true
+    detect_every: 2
+    zones:
+      - id: z1
+        name: Проезд погрузчика
+        kind: danger
+        severity: critical
+        polygon: [[0.56, 0.30], [1.0, 0.30], [1.0, 1.0], [0.25, 1.0]]
+        schedule: null          # пример: {from: "07:55", to: "12:00", days: [1, 2, 3, 4, 5]}
+    rules:
+      zone: {enabled: true}
+      running: {enabled: true, speed_thr: 1.4}
+      fall: {enabled: true}
+      immobile: {enabled: true, window_s: 8}
+      proximity: {enabled: true}
+      phone: {enabled: true}
+
+  - id: cam03
+    name: Тест — лежащий человек
+    area: Цех 2
+    source: data/test_lying_rotated.mp4
+    loop: true
+    detect_every: 4
+    zones: []
+    rules:
+      fall: {enabled: true}
+      immobile: {enabled: true, window_s: 6}
